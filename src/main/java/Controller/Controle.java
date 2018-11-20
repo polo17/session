@@ -12,6 +12,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -34,39 +35,48 @@ public class Controle extends HttpServlet {
         response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) {
             
+            HttpSession session = ((HttpServletRequest)request).getSession(true);
+            
             String joueurCree = request.getParameter("joueurCree");
             String joueurs = request.getParameter("joueurs"); 
-            String playerName = request.getParameter("playerName");  
-            
-            
+            String playerName = (String) session.getAttribute("playerName");  
             int max = 100;
             int min = 0;
+            int alea = min + (int)(Math.random() * ((max - min) + 1));
+            session.setAttribute("alea",alea);
+           
             String bas = "bas";
             String haut = "haut";
-            int testNum =0;
+            int testNum = 0;
             
             if (playerName==null){
+                playerName = request.getParameter("playerName");
+                session.setAttribute("playerName", playerName);
                 request.getRequestDispatcher("View/PageDeco.jsp").forward(request, response);
             }       
             else {
-                request.getSession(true).setAttribute("playerName", playerName);
-                int alea = min + (int)(Math.random() * ((max - min) + 1));
+                session.setAttribute("playerName", playerName);
+                 
+                alea = (int) session.getAttribute("alea");
+                String action = request.getParameter("action");
+                session.setAttribute("alea", alea);
+                session.setAttribute("testNum", testNum);
+                getServletContext().setAttribute("testNum", testNum);
+                if ("Deviner".equals(action)){
                 
-                int guess = (int)(request.getSession(true).get("guess"));
-                /*
-                if (guess==alea) {request.getRequestDispatcher("View/PageGagne.jsp").forward(request, response);}
-                else {if (guess<alea) {request.getSession(true).setAttribute("hautbas", bas);
-                                       request.getSession(true).setAttribute("testNum", testNum);}
-                      else {request.getSession(true).setAttribute("hautbas", haut);
-                            request.getSession(true).setAttribute("testNum", testNum);}}
-*/
-                request.getRequestDispatcher("View/PageCo.jsp").forward(request, response);
-            }
+                    int guess = Integer.parseInt(request.getParameter("guess"));
+                    session.setAttribute("guess", guess);
+                    if (guess==alea) {request.getRequestDispatcher("View/PageGagne.jsp").forward(request, response);}
+                    else {if (guess<alea) {session.setAttribute("hautbas", bas);
+                                           session.setAttribute("testNum", testNum);
+                                           testNum=testNum+1;}
+                          else {session.setAttribute("hautbas", haut);
+                                session.setAttribute("testNum", testNum);
+                                testNum=testNum+1;}}
+                }
 
-            
-            
-                    
-            
+                request.getRequestDispatcher("View/PageCo.jsp").forward(request, response);
+            } 
         }
     }
 
